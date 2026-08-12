@@ -1,0 +1,19 @@
+@import "primeicons/primeicons.css";
+app-rapor-olustur .form-card input,
+app-rapor-olustur .form-card select,
+app-rapor-olustur .form-card option,
+app-rapor-olustur .form-card textarea,
+app-rapor-olustur .form-card .p-inputtext,
+app-rapor-olustur .form-card .p-select-label,
+app-rapor-olustur .form-card .p-datepicker-input {
+  font-size: 13px !important;
+}
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f5f7fa;
+}

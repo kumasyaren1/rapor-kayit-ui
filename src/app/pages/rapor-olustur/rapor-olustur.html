@@ -1,0 +1,131 @@
+<div class="page">
+
+  <header class="topbar">
+    <h1>RAPOR KAYIT SİSTEMİ</h1>
+    <button type="button" class="user-menu">
+      <i class="pi pi-user"></i>
+      <span>Kullanıcı</span>
+      <i class="pi pi-chevron-down"></i>
+    </button>
+  </header>
+
+  <main class="content">
+
+    <form
+      class="form-card"
+      [formGroup]="raporForm">
+
+      <!-- Mükellef bilgileri -->
+      <h3>Mükellef Bilgileri</h3>
+
+      <div class="form-grid taxpayer-grid">
+        <div class="form-field">
+          <label for="vergiKimlikNo">
+            Vergi Kimlik No
+          </label>
+          <input
+            id="vergiKimlikNo"
+            type="text"
+            maxlength="10"
+            inputmode="numeric"
+            formControlName="vergiKimlikNo"
+            (blur)="mukellefSorgula()">
+        </div>
+
+        <div class="form-field">
+          <label for="tcKimlikNo">
+            T.C. Kimlik No
+          </label>
+          <input
+            id="tcKimlikNo"
+            type="text"
+            maxlength="11"
+            inputmode="numeric"
+            formControlName="tcKimlikNo"
+            (blur)="mukellefSorgula()">
+        </div>
+
+        <div class="form-field">
+          <label for="adSoyadUnvan">
+            Ad Soyad / Unvan
+          </label>
+          <input
+            id="adSoyadUnvan"
+            type="text"
+            formControlName="adSoyadUnvan">
+        </div>
+      </div>
+
+      <!-- Rapor bilgileri -->
+      <h3 class="section-title">Rapor Bilgileri</h3>
+
+      <div class="form-grid report-grid">
+        <div class="form-field">
+          <label for="anaRaporTuru">Ana Rapor Türü</label>
+
+          <select id="anaRaporTuru">
+            <option value="">Ana rapor türü seçiniz</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="raporTuru">Rapor Türü</label>
+
+          <select id="raporTuru" disabled>
+            <option value="">Önce ana rapor türünü seçiniz</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="vergiKodu">Vergi Kodu</label>
+
+          <select id="vergiKodu">
+            <option value="">Vergi kodu seçiniz</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="duzenlemeTarihi">Düzenleme Tarihi</label>
+
+          <input
+            id="duzenlemeTarihi"
+            type="date">
+        </div>
+      </div>
+
+      <div class="form-field report-number-field">
+        <label for="raporKayitNo">Rapor Numarası</label>
+
+        <input
+          id="raporKayitNo"
+          type="text"
+          placeholder="Sistem tarafından oluşturulacaktır"
+          readonly>
+      </div>
+
+      <div class="form-field description-field">
+        <label for="aciklama">Açıklama</label>
+
+        <textarea
+          id="aciklama"
+          maxlength="255"
+          rows="5"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <p-button
+          label="İptal"
+          type="button"
+          [outlined]="true">
+        </p-button>
+        <p-button
+          label="Kaydet"
+          type="button">
+        </p-button>
+      </div>
+
+    </form>
+
+  </main>
+
+</div>
