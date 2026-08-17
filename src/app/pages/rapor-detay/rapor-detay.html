@@ -63,9 +63,15 @@
         </div>
 
         <div class="form-actions">
-          <a pButton [outlined]="true" routerLink="/rapor-olustur">
-            Sorgulama Ekranına Geri Dön
-          </a>
+          <button
+            pButton
+            type="button"
+            [outlined]="true"
+            icon="pi pi-arrow-left"
+            label="Geri Dön"
+            (click)="don()"
+            class="btn-cancel">
+          </button>
         </div>
 
       </div>

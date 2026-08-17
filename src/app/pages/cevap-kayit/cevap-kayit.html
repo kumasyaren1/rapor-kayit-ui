@@ -1,0 +1,88 @@
+<p-toast></p-toast>
+
+<div class="page">
+  <header class="topbar">
+    <h1>RAPOR KAYIT SİSTEMİ</h1>
+    <button type="button" class="user-menu">
+      <i class="pi pi-user"></i>
+      <span>Kullanıcı</span>
+      <i class="pi pi-chevron-down"></i>
+    </button>
+  </header>
+
+  <main class="content">
+    <div class="page-heading">
+      <h2>Cevap Kayıt</h2>
+      <p>Seçilen rapora ait cevap bilgilerini kaydedebilirsiniz.</p>
+    </div>
+
+    <div class="card-container">
+      <form [formGroup]="form" (ngSubmit)="kaydet()">
+        <section class="form-section">
+          <h3>Mükellef Bilgileri</h3>
+          <div class="grid-4">
+            <div class="form-field">
+              <label>Vergi Kimlik No</label>
+              <input pInputText formControlName="vergiKimlikNo" />
+            </div>
+            <div class="form-field">
+              <label>T.C. Kimlik No</label>
+              <input pInputText formControlName="tcKimlikNo" />
+            </div>
+            <div class="form-field">
+              <label>Ad Soyad / Ünvan</label>
+              <input pInputText formControlName="adSoyadUnvan" />
+            </div>
+            <div class="form-field">
+              <label>Vergi Kodu</label>
+              <input pInputText formControlName="vergiKoduAdi" />
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3>Rapor Bilgileri</h3>
+          <div class="grid-3">
+            <div class="form-field">
+              <label>Ana Rapor Türü</label>
+              <input pInputText formControlName="anaRaporTuruAdi" />
+            </div>
+            <div class="form-field">
+              <label>Rapor Türü</label>
+              <input pInputText formControlName="raporTuruAdi" />
+            </div>
+            <div class="form-field">
+              <label>Düzenleme Tarihi</label>
+              <input pInputText formControlName="duzenlemeTarihi" />
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 16px;">
+            <div class="form-field">
+              <label>Cevap Numarası</label>
+              <input pInputText formControlName="cevapNumarasi" placeholder="Cevap numarası giriniz" />
+            </div>
+            <div class="form-field">
+              <label>Cevap Tarihi</label>
+              <p-datepicker formControlName="cevapTarihi" [showIcon]="true" dateFormat="dd.mm.yy"></p-datepicker>
+            </div>
+          </div>
+
+          <div class="form-field full-width" style="margin-top: 16px;">
+            <label>Cevap Sonucu</label>
+            <textarea pTextarea formControlName="cevapSonucu" rows="4" placeholder="Cevap sonucu giriniz."></textarea>
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <button pButton type="button" [outlined]="true" (click)="iptal()" class="btn-cancel">
+            <span>İptal ⨂</span>
+          </button>
+          <button pButton type="submit" [loading]="kaydediliyor" class="btn-save">
+            <span>Kaydet 💾</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>

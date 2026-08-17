@@ -12,36 +12,35 @@
 
   <main class="content">
     <div class="page-heading">
-      <h2>Yeni Rapor Kaydı</h2>
-      <p>Sisteme yeni bir rapor kaydı oluşturabilirsiniz.</p>
+      <h2>Rapor Güncelle</h2>
+      <p>Rapor kaydına ait bilgileri güncelleyebilirsiniz.</p>
     </div>
 
     <div class="card-container">
-      <form [formGroup]="form" (ngSubmit)="kaydet()">
+      <div class="card-header-badge">
+        <span class="report-no">Rapor Kayıt No: {{ raporDetay?.raporKayitNo }}</span>
+        <p-tag [value]="raporDetay?.durum || 'KAYITLI'" severity="success"></p-tag>
+      </div>
 
-        <!-- Mükellef Bilgileri -->
+      <form [formGroup]="form" (ngSubmit)="guncelle()">
         <section class="form-section">
           <h3>Mükellef Bilgileri</h3>
           <div class="grid-4">
             <div class="form-field">
-              <label for="vkn">Vergi Kimlik No</label>
-              <input pInputText id="vkn" formControlName="vergiKimlikNo" placeholder="10 haneli VKN" (blur)="mukellefSorgula()" />
+              <label>Vergi Kimlik No</label>
+              <input pInputText formControlName="vergiKimlikNo" />
             </div>
-
             <div class="form-field">
-              <label for="tckn">T.C. Kimlik No</label>
-              <input pInputText id="tckn" formControlName="tcKimlikNo" placeholder="11 haneli TCKN" (blur)="mukellefSorgula()" />
+              <label>T.C. Kimlik No</label>
+              <input pInputText formControlName="tcKimlikNo" />
             </div>
-
             <div class="form-field">
-              <label for="unvan">Ad Soyad / Ünvan</label>
-              <input pInputText id="unvan" formControlName="adSoyadUnvan" placeholder="Mükellef sorgulanınca dolar" />
+              <label>Ad Soyad / Ünvan</label>
+              <input pInputText formControlName="adSoyadUnvan" />
             </div>
-
             <div class="form-field">
-              <label for="vergiKodu">Vergi Kodu</label>
+              <label>Vergi Kodu</label>
               <p-select
-                id="vergiKodu"
                 [options]="vergiKodlari"
                 formControlName="vergiKoduId"
                 optionLabel="ad"
@@ -52,39 +51,31 @@
           </div>
         </section>
 
-        <!-- Rapor Bilgileri -->
         <section class="form-section">
           <h3>Rapor Bilgileri</h3>
           <div class="grid-3">
             <div class="form-field">
-              <label for="anaRaporTuru">Ana Rapor Türü</label>
+              <label>Ana Rapor Türü</label>
               <p-select
-                id="anaRaporTuru"
                 [options]="anaRaporTurleri"
                 formControlName="anaRaporTuruId"
                 optionLabel="ad"
                 optionValue="id"
-                placeholder="Seçiniz"
                 (onChange)="anaRaporTuruDegisti()"
               ></p-select>
             </div>
-
             <div class="form-field">
-              <label for="raporTuru">Rapor Türü</label>
+              <label>Rapor Türü</label>
               <p-select
-                id="raporTuru"
                 [options]="raporTurleri"
                 formControlName="raporTuruId"
                 optionLabel="ad"
                 optionValue="id"
-                placeholder="Önce ana rapor türü seçiniz"
               ></p-select>
             </div>
-
             <div class="form-field">
-              <label for="duzenlemeTarihi">Düzenleme Tarihi</label>
+              <label>Düzenleme Tarihi</label>
               <p-datepicker
-                id="duzenlemeTarihi"
                 formControlName="duzenlemeTarihi"
                 [showIcon]="true"
                 dateFormat="dd.mm.yy"
@@ -92,9 +83,9 @@
             </div>
           </div>
 
-          <div class="form-field full-width" style="margin-top: 16px;">
-            <label for="aciklama">Açıklama</label>
-            <textarea pTextarea id="aciklama" formControlName="aciklama" rows="4" placeholder="Açıklama giriniz..."></textarea>
+          <div class="form-field full-width">
+            <label>Açıklama</label>
+            <textarea pTextarea formControlName="aciklama" rows="4"></textarea>
           </div>
         </section>
 
@@ -102,8 +93,8 @@
           <button pButton type="button" [outlined]="true" (click)="iptal()" class="btn-cancel">
             <span>İptal ⨂</span>
           </button>
-          <button pButton type="submit" [loading]="kaydediliyor" class="btn-save">
-            <span>Kaydet 💾</span>
+          <button pButton type="submit" icon="pi pi-pencil" [loading]="kaydediliyor" class="btn-save">
+            <span>Güncelle</span>
           </button>
         </div>
       </form>

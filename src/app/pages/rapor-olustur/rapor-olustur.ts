@@ -1,154 +1,245 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
-import { SicilService } from '../../services/sicil';
-import { ReferansService } from '../../services/referans';
 import { RaporService } from '../../services/rapor';
-
+import { ReferansService } from '../../services/referans';
+import { SicilService } from '../../services/sicil';
 import { AnaRaporTuruResponse, RaporTuruResponse, VergiKoduResponse } from '../../models/referans';
+import { MukellefResponse } from '../../models/mukellef-response';
 
 @Component({
   selector: 'app-rapor-olustur',
-  imports: [ButtonModule, SelectModule, ToastModule, ReactiveFormsModule],
-  providers: [MessageService], // toast bildirimleri için
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ButtonModule,
+    InputTextModule,
+    TextareaModule,
+    SelectModule,
+    DatePickerModule,
+    ToastModule,
+  ],
+  providers: [MessageService],
   templateUrl: './rapor-olustur.html',
   styleUrl: './rapor-olustur.scss',
 })
 export class RaporOlustur implements OnInit {
+  form!: FormGroup;
+
   anaRaporTurleri: AnaRaporTuruResponse[] = [];
   raporTurleri: RaporTuruResponse[] = [];
   vergiKodlari: VergiKoduResponse[] = [];
-  sonOlusturulanRaporNo: string | null = null;
 
-  raporForm = new FormGroup({
-    vergiKimlikNo: new FormControl('', { nonNullable: true }),
-    tcKimlikNo: new FormControl('', { nonNullable: true }),
-    adSoyadUnvan: new FormControl({ value: '', disabled: true }, { nonNullable: true }),
+  mukellefBilgisi: MukellefResponse | null = null;
+  yukleniyor = false;
+  kaydediliyor = false;
 
-    anaRaporTuruId: new FormControl<string | null>(null, { validators: Validators.required }),
-    raporTuruId: new FormControl<string | null>(
-      { value: null, disabled: true },
-      { validators: Validators.required },
-    ),
-    vergiKoduId: new FormControl<string | null>(null, { validators: Validators.required }),
-    duzenlemeTarihi: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    aciklama: new FormControl('', { nonNullable: true }),
-  });
+  raporId: string | null = null;
+  duzenlemeModu = false;
 
   constructor(
-    private sicilService: SicilService,
-    private referansService: ReferansService,
+    private fb: FormBuilder,
+    private router: Router,
+    private route: ActivatedRoute,
     private raporService: RaporService,
+    private referansService: ReferansService,
+    private sicilService: SicilService,
     private messageService: MessageService,
   ) {}
 
   ngOnInit(): void {
-    // Sayfa açılır açılmaz iki bağımsız dropdown'ı dolduruyoruz.
-    // "Rapor Türü" ise ana rapor türü seçilmeden dolmaz (cascading).
-    this.referansService
-      .anaRaporTurleriniGetir()
-      .subscribe((veri) => (this.anaRaporTurleri = veri));
+    this.formOlustur();
+    this.referansVerileriniYukle();
 
-    this.referansService.vergiKodlariniGetir().subscribe((veri) => (this.vergiKodlari = veri));
+    this.raporId = this.route.snapshot.paramMap.get('id');
+    if (this.raporId) {
+      this.duzenlemeModu = true;
+      this.raporDetayiniYukle(this.raporId);
+    }
+  }
+
+  private formOlustur(): void {
+    this.form = this.fb.group({
+      vergiKimlikNo: [''],
+      tcKimlikNo: [''],
+      adSoyadUnvan: [{ value: '', disabled: true }],
+      anaRaporTuruId: [null, Validators.required],
+      raporTuruId: [{ value: null, disabled: true }, Validators.required],
+      vergiKoduId: [null, Validators.required],
+      duzenlemeTarihi: [new Date(), Validators.required],
+      aciklama: [''],
+    });
+  }
+
+  private referansVerileriniYukle(): void {
+    this.referansService.anaRaporTurleriniGetir().subscribe({
+      next: (data) => (this.anaRaporTurleri = data),
+      error: () => this.hataGoster('Ana rapor türleri yüklenemedi.'),
+    });
+
+    this.referansService.vergiKodlariniGetir().subscribe({
+      next: (data) => (this.vergiKodlari = data),
+      error: () => this.hataGoster('Vergi kodları yüklenemedi.'),
+    });
   }
 
   anaRaporTuruDegisti(): void {
-    const anaRaporTuruId = this.raporForm.controls.anaRaporTuruId.value;
-
-    this.raporForm.controls.raporTuruId.reset();
+    const anaRaporTuruId = this.form.get('anaRaporTuruId')?.value;
+    this.form.get('raporTuruId')?.reset();
     this.raporTurleri = [];
 
     if (!anaRaporTuruId) {
-      this.raporForm.controls.raporTuruId.disable();
+      this.form.get('raporTuruId')?.disable();
       return;
     }
 
-    this.raporForm.controls.raporTuruId.enable();
-    this.referansService
-      .raporTurleriniGetir(anaRaporTuruId)
-      .subscribe((veri) => (this.raporTurleri = veri));
+    this.form.get('raporTuruId')?.enable();
+    this.referansService.raporTurleriniGetir(anaRaporTuruId).subscribe({
+      next: (data) => (this.raporTurleri = data),
+      error: () => this.hataGoster('Rapor türleri yüklenemedi.'),
+    });
   }
 
   mukellefSorgula(): void {
-    const vergiKimlikNo = this.raporForm.controls.vergiKimlikNo.value.trim();
-    const tcKimlikNo = this.raporForm.controls.tcKimlikNo.value.trim();
+    const vkn = this.form.get('vergiKimlikNo')?.value?.trim();
+    const tckn = this.form.get('tcKimlikNo')?.value?.trim();
 
-    const vknGecerli = vergiKimlikNo.length === 10;
-    const tcknGecerli = tcKimlikNo.length === 11;
-
-    if (!vknGecerli && !tcknGecerli) {
-      this.raporForm.controls.adSoyadUnvan.reset();
+    if (!vkn && !tckn) {
+      this.hataGoster('Lütfen VKN veya TCKN giriniz.');
       return;
     }
 
-    this.sicilService
-      .mukellefSorgula(vknGecerli ? vergiKimlikNo : undefined, tcknGecerli ? tcKimlikNo : undefined)
-      .subscribe({
-        next: (mukellef) => this.raporForm.controls.adSoyadUnvan.setValue(mukellef.adSoyadUnvan),
-        error: () => {
-          this.raporForm.controls.adSoyadUnvan.reset();
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Mükellef bulunamadı',
-            detail: 'Girilen VKN/TCKN ile eşleşen bir mükellef yok.',
+    this.yukleniyor = true;
+    this.sicilService.mukellefSorgula(vkn, tckn).subscribe({
+      next: (mukellef) => {
+        this.mukellefBilgisi = mukellef;
+        this.form.patchValue({
+          adSoyadUnvan: mukellef.adSoyadUnvan,
+          vergiKimlikNo: mukellef.vergiKimlikNo,
+          tcKimlikNo: mukellef.tcKimlikNo,
+        });
+        this.yukleniyor = false;
+      },
+      error: (err) => {
+        this.mukellefBilgisi = null;
+        this.form.patchValue({ adSoyadUnvan: '' });
+        this.hataGoster(err.error?.message ?? 'Mükellef bulunamadı.');
+        this.yukleniyor = false;
+      },
+    });
+  }
+
+  private raporDetayiniYukle(id: string): void {
+    this.yukleniyor = true;
+    this.raporService.raporGetir(id).subscribe({
+      next: (rapor) => {
+        this.form.patchValue({
+          vergiKimlikNo: rapor.vergiKimlikNo,
+          tcKimlikNo: rapor.tcKimlikNo,
+          adSoyadUnvan: rapor.adSoyadUnvan,
+          anaRaporTuruId: rapor.anaRaporTuruId,
+          vergiKoduId: rapor.vergiKodu,
+          duzenlemeTarihi: new Date(rapor.duzenlemeTarihi),
+          aciklama: rapor.aciklama,
+        });
+
+        if (rapor.anaRaporTuruId) {
+          this.form.get('raporTuruId')?.enable();
+          this.referansService.raporTurleriniGetir(rapor.anaRaporTuruId).subscribe({
+            next: (turler) => {
+              this.raporTurleri = turler;
+              this.form.patchValue({ raporTuruId: rapor.raporTuruId });
+            },
           });
-        },
-      });
+        }
+
+        this.yukleniyor = false;
+      },
+      error: () => {
+        this.hataGoster('Rapor detayları yüklenemedi.');
+        this.yukleniyor = false;
+      },
+    });
   }
 
   kaydet(): void {
-    if (this.raporForm.invalid) {
-      this.raporForm.markAllAsTouched();
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Eksik bilgi',
-        detail: 'Lütfen zorunlu alanları doldurun.',
-      });
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.hataGoster('Lütfen zorunlu alanları eksiksiz doldurunuz.');
       return;
     }
 
-    const v = this.raporForm.getRawValue();
+    const val = this.form.getRawValue();
+    const duzenlemeTarihi =
+      val.duzenlemeTarihi instanceof Date
+        ? val.duzenlemeTarihi.toISOString().split('T')[0]
+        : val.duzenlemeTarihi;
 
-    this.raporService
-      .raporOlustur({
-        vergiKimlikNo: v.vergiKimlikNo || undefined,
-        tcKimlikNo: v.tcKimlikNo || undefined,
-        anaRaporTuruId: v.anaRaporTuruId!,
-        raporTuruId: v.raporTuruId!,
-        vergiKoduId: v.vergiKoduId!,
-        duzenlemeTarihi: v.duzenlemeTarihi,
-        aciklama: v.aciklama || undefined,
-      })
-      .subscribe({
-        next: (rapor) => {
-          this.sonOlusturulanRaporNo = rapor.raporKayitNo;
+    const requestPayload = {
+      vergiKimlikNo: val.vergiKimlikNo?.trim() || undefined,
+      tcKimlikNo: val.tcKimlikNo?.trim() || undefined,
+      anaRaporTuruId: val.anaRaporTuruId,
+      raporTuruId: val.raporTuruId,
+      vergiKoduId: val.vergiKoduId,
+      duzenlemeTarihi: duzenlemeTarihi,
+      aciklama: val.aciklama?.trim() || undefined,
+    };
 
+    this.kaydediliyor = true;
+
+    if (this.duzenlemeModu && this.raporId) {
+      this.raporService.raporGuncelle(this.raporId, requestPayload).subscribe({
+        next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Rapor oluşturuldu',
-            detail: `Rapor kayıt no: ${rapor.raporKayitNo}`,
+            summary: 'Başarılı',
+            detail: 'Rapor başarıyla güncellendi.',
           });
-          this.raporForm.reset();
-          this.raporForm.controls.raporTuruId.disable();
+          setTimeout(() => this.router.navigate(['/rapor-sorgula']), 1000);
         },
-        error: (hata) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Hata',
-            detail: hata.error?.message ?? 'Rapor oluşturulamadı.',
-          });
+        error: (err) => {
+          this.hataGoster(err.error?.message ?? 'Güncelleme sırasında hata oluştu.');
+          this.kaydediliyor = false;
         },
       });
+    } else {
+      this.raporService.raporOlustur(requestPayload).subscribe({
+        next: (res) => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Başarılı',
+            detail: `Rapor oluşturuldu: ${res.raporKayitNo}`,
+          });
+          setTimeout(() => this.router.navigate(['/rapor-sorgula']), 1000);
+        },
+        error: (err) => {
+          this.hataGoster(err.error?.message ?? 'Rapor kaydedilirken hata oluştu.');
+          this.kaydediliyor = false;
+        },
+      });
+    }
   }
 
-  iptalEt(): void {
-    this.raporForm.reset();
-    this.raporForm.controls.raporTuruId.disable();
-    this.sonOlusturulanRaporNo = null;
+  iptal(): void {
+    this.router.navigate(['/rapor-sorgula']);
+  }
+
+  private hataGoster(mesaj: string): void {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Hata',
+      detail: mesaj,
+    });
   }
 }

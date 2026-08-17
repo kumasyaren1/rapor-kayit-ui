@@ -1,47 +1,63 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 
-import { InputTextModule } from 'primeng/inputtext';
-import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 import { RaporService } from '../../services/rapor';
 import { RaporResponse } from '../../models/rapor';
 
 @Component({
   selector: 'app-rapor-detay',
-  imports: [RouterLink, DatePipe, InputTextModule, TagModule, ButtonModule],
+  standalone: true,
+  imports: [CommonModule, ButtonModule, TagModule, ToastModule],
+  providers: [MessageService],
   templateUrl: './rapor-detay.html',
   styleUrl: './rapor-detay.scss',
 })
 export class RaporDetay implements OnInit {
+  raporId!: string;
   rapor: RaporResponse | null = null;
   hataMesaji: string | null = null;
+  yukleniyor = false;
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private raporService: RaporService,
-    private cdr: ChangeDetectorRef, // YENİ
+    private messageService: MessageService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-
-    if (!id) {
-      this.hataMesaji = 'Geçersiz rapor adresi.';
+    this.raporId = this.route.snapshot.paramMap.get('id')!;
+    if (!this.raporId) {
+      this.hataMesaji = 'Geçersiz rapor adresi';
       return;
     }
+    this.raporuYukle();
+  }
 
-    this.raporService.raporGetir(id).subscribe({
-      next: (rapor) => {
-        this.rapor = rapor;
-        this.cdr.detectChanges(); // YENİ — Angular'a "şimdi ekranı güncelle" diyoruz
+  private raporuYukle(): void {
+    this.yukleniyor = true;
+    this.raporService.raporGetir(this.raporId).subscribe({
+      next: (res) => {
+        this.rapor = res;
+        this.yukleniyor = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.hataMesaji = 'Rapor bulunamadı.';
-        this.cdr.detectChanges(); // YENİ
+        this.yukleniyor = false;
+        this.cdr.detectChanges();
       },
     });
+  }
+
+  don(): void {
+    this.router.navigate(['/rapor-sorgula']);
   }
 }

@@ -9,6 +9,7 @@ export interface RaporOlusturRequest {
 }
 
 export interface RaporResponse {
+  id: string;
   raporId: string;
   raporKayitNo: string;
   vergiKimlikNo: string | null;

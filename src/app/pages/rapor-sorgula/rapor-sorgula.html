@@ -1,0 +1,178 @@
+<p-toast></p-toast>
+
+<div class="page">
+  <header class="topbar">
+    <h1>RAPOR KAYIT SİSTEMİ</h1>
+    <button type="button" class="user-menu">
+      <i class="pi pi-user"></i>
+      <span>Kullanıcı</span>
+      <i class="pi pi-chevron-down"></i>
+    </button>
+  </header>
+
+  <main class="content">
+    <div class="page-heading">
+      <h2>Rapor Kayıtları</h2>
+      <p>Kayıtlı raporları görüntüleyebilir ve yönetebilirsiniz.</p>
+    </div>
+
+    <!-- Filtre Kartı -->
+    <div class="filter-card">
+      <h3>Rapor Sorgulama</h3>
+      <form [formGroup]="sorguForm" (ngSubmit)="sorgula()">
+        <div class="filter-grid">
+          <div class="form-field">
+            <label for="raporKayitNo">Rapor Kayıt No</label>
+            <input pInputText id="raporKayitNo" formControlName="raporKayitNo" placeholder="RPR-2026-0001" />
+          </div>
+
+          <div class="form-field">
+            <label for="vergiKimlikNo">Vergi Kimlik No</label>
+            <input pInputText id="vergiKimlikNo" formControlName="vergiKimlikNo" placeholder="10 haneli VKN" />
+          </div>
+
+          <div class="form-field">
+            <label for="tcKimlikNo">T.C. Kimlik No</label>
+            <input pInputText id="tcKimlikNo" formControlName="tcKimlikNo" placeholder="11 haneli TCKN" />
+          </div>
+
+          <div class="form-field">
+            <label for="durum">Durum</label>
+            <p-select
+              id="durum"
+              [options]="durumSecenekleri"
+              formControlName="durum"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Tümü"
+              [showClear]="true"
+            ></p-select>
+          </div>
+
+          <div class="form-field">
+            <label for="anaRaporTuru">Ana Rapor Türü</label>
+            <p-select
+              id="anaRaporTuru"
+              [options]="anaRaporTurleri"
+              formControlName="anaRaporTuruId"
+              optionLabel="ad"
+              optionValue="id"
+              placeholder="Seçiniz"
+              [showClear]="true"
+              (onChange)="anaRaporTuruDegisti()"
+            ></p-select>
+          </div>
+
+          <div class="form-field">
+            <label for="raporTuru">Rapor Türü</label>
+            <p-select
+              id="raporTuru"
+              [options]="raporTurleri"
+              formControlName="raporTuruId"
+              optionLabel="ad"
+              optionValue="id"
+              placeholder="Önce ana rapor türünü seçiniz."
+              [showClear]="true"
+            ></p-select>
+          </div>
+
+          <div class="form-field">
+            <label for="tarihAraligi">Düzenleme Tarih Aralığı</label>
+            <p-datepicker
+              id="tarihAraligi"
+              formControlName="tarihAraligi"
+              selectionMode="range"
+              [readonlyInput]="true"
+              placeholder="Başlangıç tarihi - Bitiş tarihi"
+              [showIcon]="true"
+              dateFormat="dd.mm.yy"
+            ></p-datepicker>
+          </div>
+
+          <div class="filter-actions">
+            <button pButton type="button" label="Temizle" icon="pi pi-refresh" [outlined]="true" (click)="temizle()" class="btn-clear"></button>
+            <button pButton type="submit" label="Sorgula" icon="pi pi-search" class="btn-search"></button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Sonuç Başlığı & Aksiyon Butonları -->
+    <div class="result-header">
+      <div class="left-action">
+        <h3>Sorgulama Sonuçları</h3>
+        <button pButton label="+ Yeni Rapor Oluştur" class="btn-primary" (click)="yeniRaporOlustur()"></button>
+      </div>
+
+      <div class="right-actions">
+        <button pButton [outlined]="true" icon="pi pi-pencil" [disabled]="!guncelleAktif" (click)="guncelle()">
+          <span>Güncelle</span>
+        </button>
+        <button pButton [outlined]="true" icon="pi pi-comments" [disabled]="!cevapKaydetAktif" (click)="cevapKaydet()">
+          <span>Cevap Kaydet</span>
+        </button>
+        <button pButton [outlined]="true" icon="pi pi-file-check" [disabled]="!tahakkukKesAktif" (click)="tahakkukKes()">
+          <span>Tahakkuk Kes</span>
+        </button>
+        <button pButton [outlined]="true" icon="pi pi-times-circle" severity="danger" [disabled]="!iptalEtAktif" (click)="iptalEt()">
+          <span>İptal Et</span>
+        </button>
+        <button pButton [outlined]="true" icon="pi pi-eye" [disabled]="!seciliRapor" (click)="goruntule()">
+          <span>Görüntüle</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sonuç Tablosu -->
+    <div class="table-card">
+      <p-table
+        [value]="raporlar"
+        [(selection)]="seciliRapor"
+        selectionMode="single"
+        dataKey="raporKayitNo"
+        [loading]="yukleniyor"
+        [paginator]="true"
+        [rows]="10"
+        [totalRecords]="toplamKayit"
+        [lazy]="true"
+        (onLazyLoad)="onLazyLoad($event)"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Toplam {totalRecords} kayıt"
+      >
+        <ng-template #header>
+          <tr>
+            <th style="width: 3.5rem"></th>
+            <th>Rapor Kayıt No</th>
+            <th>VKN / TCKN</th>
+            <th>Ad Soyad / Ünvan</th>
+            <th>Rapor Türü</th>
+            <th>Düzenleme Tarihi</th>
+            <th>Durum</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-row>
+          <tr [pSelectableRow]="row">
+            <td>
+              <p-tableRadioButton [value]="row"></p-tableRadioButton>
+            </td>
+            <td><strong>{{ row.raporKayitNo }}</strong></td>
+            <td>{{ row.vergiKimlikNo || row.tcKimlikNo || '-' }}</td>
+            <td>{{ row.adSoyadUnvan }}</td>
+            <td>{{ row.raporTuruAdi }}</td>
+            <td>{{ row.duzenlemeTarihi | date:'dd.MM.yyyy' }}</td>
+            <td>
+              <p-tag [value]="row.durum" [severity]="row.durum === 'KAYITLI' ? 'success' : row.durum === 'IPTAL' ? 'danger' : 'info'"></p-tag>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="7" class="empty-message">Kriterlere uygun rapor kaydı bulunamadı.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </main>
+</div>
