@@ -1,14 +1,19 @@
 import { Routes } from '@angular/router';
-import { RaporOlustur } from './pages/rapor-olustur/rapor-olustur'; //Oluşturduğumuz component’i bu dosyada kullanabilmemizi sağlar.
+import { RaporOlustur } from './pages/rapor-olustur/rapor-olustur';
+import { RaporDetay } from './pages/rapor-detay/rapor-detay'; // YENİ
 
 export const routes: Routes = [
   {
-    path: '', //Kullanıcı doğrudan localhost:4200 adresine girdiğinde çalışır.
-    redirectTo: 'rapor-olustur', //Kullanıcıyı otomatik olarak /rapor-olustur adresine gönderir.
-    pathMatch: 'full' //URL yolunun tamamı boşsa bu route’u çalıştır.
+    path: '',
+    redirectTo: 'rapor-olustur',
+    pathMatch: 'full',
   },
   {
-    path: 'rapor-olustur', //Tarayıcıdaki URL yoludur
-    component: RaporOlustur //Bu adrese gidildiğinde hangi component’in ekranda gösterileceğini belirtir.
-  }
+    path: 'rapor-olustur',
+    component: RaporOlustur,
+  },
+  {
+    path: 'rapor/:id',
+    component: RaporDetay,
+  },
 ];

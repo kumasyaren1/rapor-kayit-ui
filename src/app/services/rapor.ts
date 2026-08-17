@@ -13,4 +13,7 @@ export class RaporService {
   raporOlustur(request: RaporOlusturRequest): Observable<RaporResponse> {
     return this.http.post<RaporResponse>(this.apiUrl, request);
   }
+  raporGetir(id: string): Observable<RaporResponse> {
+    return this.http.get<RaporResponse>(`${this.apiUrl}/${id}`);
+  }
 }
