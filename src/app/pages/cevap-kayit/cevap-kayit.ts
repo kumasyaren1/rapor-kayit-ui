@@ -91,6 +91,11 @@ export class CevapKayit implements OnInit {
   kaydet(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Eksik bilgi',
+        detail: 'Lütfen zorunlu alanları doldurun.',
+      });
       return;
     }
 

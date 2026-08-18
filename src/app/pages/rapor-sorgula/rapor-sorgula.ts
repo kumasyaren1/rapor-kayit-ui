@@ -164,7 +164,7 @@ export class RaporSorgula implements OnInit {
   }
 
   goruntule(): void {
-    const id = this.seciliRapor?.id || this.seciliRapor?.raporId;
+    const id = this.seciliRapor?.raporId;
     if (id) {
       this.router.navigate(['/rapor', id]);
     }
@@ -174,14 +174,9 @@ export class RaporSorgula implements OnInit {
     return this.seciliRapor?.durum === 'KAYITLI';
   }
 
-  get cevapKaydetAktif(): boolean {
-    if (!this.seciliRapor || this.seciliRapor.durum !== 'KAYITLI') {
-      return false;
+    get cevapKaydetAktif(): boolean {
+      return this.seciliRapor?.durum === 'KAYITLI';
     }
-    const ad = this.seciliRapor.anaRaporTuruAdi?.toLowerCase() || '';
-    const kod = this.seciliRapor.anaRaporTuruKodu?.toLowerCase() || '';
-    return ad.includes('teftiş') || kod.includes('teftis');
-  }
 
   get tahakkukKesAktif(): boolean {
     return (
@@ -196,21 +191,21 @@ export class RaporSorgula implements OnInit {
   }
 
   guncelle(): void {
-    const id = this.seciliRapor?.id || this.seciliRapor?.raporId;
+    const id = this.seciliRapor?.raporId;
     if (id) {
       this.router.navigate(['/rapor-guncelle', id]);
     }
   }
 
   cevapKaydet(): void {
-    const id = this.seciliRapor?.id || this.seciliRapor?.raporId;
+    const id = this.seciliRapor?.raporId;
     if (id) {
       this.router.navigate(['/cevap-kayit', id]);
     }
   }
 
   iptalEt(): void {
-    const id = this.seciliRapor?.id || this.seciliRapor?.raporId;
+    const id = this.seciliRapor?.raporId;
     if (!this.seciliRapor || !id) return;
 
     if (
@@ -239,7 +234,7 @@ export class RaporSorgula implements OnInit {
   }
 
   tahakkukKes(): void {
-    const id = this.seciliRapor?.id || this.seciliRapor?.raporId;
+    const id = this.seciliRapor?.raporId;
     if (!this.seciliRapor || !id) return;
 
     if (

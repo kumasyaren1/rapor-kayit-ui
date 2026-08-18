@@ -70,7 +70,7 @@ export class RaporGuncelle implements OnInit {
       adSoyadUnvan: [{ value: '', disabled: true }],
       vergiKoduId: [null, Validators.required],
       anaRaporTuruId: [null, Validators.required],
-      raporTuruId: [null, Validators.required],
+      raporTuruId: [{ value: null, disabled: true }, Validators.required],
       duzenlemeTarihi: [null, Validators.required],
       aciklama: [''],
     });
@@ -83,9 +83,11 @@ export class RaporGuncelle implements OnInit {
 
   private raporuYukle(): void {
     this.yukleniyor = true;
+
     this.raporService.raporGetir(this.raporId).subscribe({
       next: (rapor) => {
         this.raporDetay = rapor;
+
         this.form.patchValue({
           vergiKimlikNo: rapor.vergiKimlikNo || '-',
           tcKimlikNo: rapor.tcKimlikNo || '-',
@@ -97,11 +99,27 @@ export class RaporGuncelle implements OnInit {
         });
 
         if (rapor.anaRaporTuruId) {
-          this.referansService.raporTurleriniGetir(rapor.anaRaporTuruId).subscribe((turler) => {
-            this.raporTurleri = turler;
-            this.form.patchValue({ raporTuruId: rapor.raporTuruId });
+          const raporTuruControl = this.form.get('raporTuruId');
+
+          raporTuruControl?.enable();
+
+          this.referansService.raporTurleriniGetir(rapor.anaRaporTuruId).subscribe({
+            next: (turler) => {
+              this.raporTurleri = turler;
+              raporTuruControl?.setValue(rapor.raporTuruId);
+            },
+            error: () => {
+              raporTuruControl?.disable();
+
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Hata',
+                detail: 'Rapor türleri yüklenemedi.',
+              });
+            },
           });
         }
+
         this.yukleniyor = false;
       },
       error: () => {
@@ -110,6 +128,7 @@ export class RaporGuncelle implements OnInit {
           summary: 'Hata',
           detail: 'Rapor detayları yüklenemedi.',
         });
+
         this.yukleniyor = false;
       },
     });
@@ -117,17 +136,42 @@ export class RaporGuncelle implements OnInit {
 
   anaRaporTuruDegisti(): void {
     const anaId = this.form.get('anaRaporTuruId')?.value;
-    this.form.get('raporTuruId')?.reset();
+    const raporTuruControl = this.form.get('raporTuruId');
+
+    raporTuruControl?.reset();
     this.raporTurleri = [];
 
-    if (anaId) {
-      this.referansService.raporTurleriniGetir(anaId).subscribe((d) => (this.raporTurleri = d));
+    if (!anaId) {
+      raporTuruControl?.disable();
+      return;
     }
+
+    raporTuruControl?.enable();
+
+    this.referansService.raporTurleriniGetir(anaId).subscribe({
+      next: (turler) => {
+        this.raporTurleri = turler;
+      },
+      error: () => {
+        raporTuruControl?.disable();
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Hata',
+          detail: 'Rapor türleri yüklenemedi.',
+        });
+      },
+    });
   }
 
   guncelle(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Eksik bilgi',
+        detail: 'Lütfen zorunlu alanları doldurun.',
+      });
       return;
     }
 

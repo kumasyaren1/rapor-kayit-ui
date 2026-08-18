@@ -43,8 +43,8 @@
               <p-select
                 [options]="vergiKodlari"
                 formControlName="vergiKoduId"
-                optionLabel="ad"
-                optionValue="id"
+                optionLabel="vergiKoduAdi"
+                optionValue="vergiKoduId"
                 placeholder="Seçiniz"
               ></p-select>
             </div>
@@ -59,8 +59,8 @@
               <p-select
                 [options]="anaRaporTurleri"
                 formControlName="anaRaporTuruId"
-                optionLabel="ad"
-                optionValue="id"
+                optionLabel="anaRaporTuruAdi"
+                optionValue="anaRaporTuruId"
                 (onChange)="anaRaporTuruDegisti()"
               ></p-select>
             </div>
@@ -69,8 +69,8 @@
               <p-select
                 [options]="raporTurleri"
                 formControlName="raporTuruId"
-                optionLabel="ad"
-                optionValue="id"
+                optionLabel="raporTuruAdi"
+                optionValue="raporTuruId"
               ></p-select>
             </div>
             <div class="form-field">
