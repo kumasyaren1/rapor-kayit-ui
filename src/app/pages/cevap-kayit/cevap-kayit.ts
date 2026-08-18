@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -33,7 +33,11 @@ export class CevapKayit implements OnInit {
   form!: FormGroup;
   raporId!: string;
   rapor: RaporResponse | null = null;
+
   kaydediliyor = false;
+
+  bugun: Date = new Date();
+  enErkenCevapTarihi: Date | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -58,6 +62,7 @@ export class CevapKayit implements OnInit {
       anaRaporTuruAdi: [{ value: '', disabled: true }],
       raporTuruAdi: [{ value: '', disabled: true }],
       duzenlemeTarihi: [{ value: '', disabled: true }],
+
       cevapNumarasi: ['', Validators.required],
       cevapTarihi: [new Date(), Validators.required],
       cevapSonucu: ['', Validators.required],
@@ -68,6 +73,9 @@ export class CevapKayit implements OnInit {
     this.raporService.raporGetir(this.raporId).subscribe({
       next: (res) => {
         this.rapor = res;
+
+        this.enErkenCevapTarihi = this.metindenYerelTarihOlustur(res.duzenlemeTarihi);
+
         this.form.patchValue({
           vergiKimlikNo: res.vergiKimlikNo || '-',
           tcKimlikNo: res.tcKimlikNo || '-',
@@ -79,11 +87,7 @@ export class CevapKayit implements OnInit {
         });
       },
       error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Hata',
-          detail: 'Rapor bilgileri alınamadı.',
-        });
+        this.hataGoster('Rapor bilgileri alınamadı.');
       },
     });
   }
@@ -91,24 +95,27 @@ export class CevapKayit implements OnInit {
   kaydet(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+
       this.messageService.add({
         severity: 'warn',
         summary: 'Eksik bilgi',
         detail: 'Lütfen zorunlu alanları doldurun.',
       });
+
       return;
     }
 
-    const { cevapNumarasi, cevapTarihi, cevapSonucu } = this.form.value;
-    const formatliTarih =
-      cevapTarihi instanceof Date ? cevapTarihi.toISOString().split('T')[0] : cevapTarihi;
+    const { cevapNumarasi, cevapTarihi, cevapSonucu } = this.form.getRawValue();
+
+    const formatliTarih = this.tarihiFormatla(cevapTarihi);
 
     this.kaydediliyor = true;
+
     this.raporService
       .cevapKaydet(this.raporId, {
-        cevapNumarasi,
+        cevapNumarasi: cevapNumarasi.trim(),
         cevapTarihi: formatliTarih,
-        cevapSonucu,
+        cevapSonucu: cevapSonucu.trim(),
       })
       .subscribe({
         next: () => {
@@ -117,14 +124,12 @@ export class CevapKayit implements OnInit {
             summary: 'Başarılı',
             detail: 'Cevap kaydı başarıyla tamamlandı.',
           });
+
           setTimeout(() => this.router.navigate(['/rapor-sorgula']), 1000);
         },
         error: (err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Hata',
-            detail: err.error?.message ?? 'Kayıt başarısız.',
-          });
+          this.hataGoster(err.error?.message ?? 'Cevap kaydı sırasında hata oluştu.');
+
           this.kaydediliyor = false;
         },
       });
@@ -132,5 +137,26 @@ export class CevapKayit implements OnInit {
 
   iptal(): void {
     this.router.navigate(['/rapor-sorgula']);
+  }
+
+  private tarihiFormatla(tarih: Date | string): string {
+    if (tarih instanceof Date) {
+      return formatDate(tarih, 'yyyy-MM-dd', 'en-US');
+    }
+
+    return tarih;
+  }
+
+  private metindenYerelTarihOlustur(tarih: string): Date {
+    const [yil, ay, gun] = tarih.split('-').map(Number);
+    return new Date(yil, ay - 1, gun);
+  }
+
+  private hataGoster(mesaj: string): void {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Hata',
+      detail: mesaj,
+    });
   }
 }

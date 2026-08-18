@@ -16,6 +16,7 @@ import { RaporService } from '../../services/rapor';
 import { ReferansService } from '../../services/referans';
 import { RaporResponse } from '../../models/rapor';
 import { AnaRaporTuruResponse, RaporTuruResponse } from '../../models/referans';
+import { formatDate } from '@angular/common';
 
 @Component({
   selector: 'app-rapor-sorgula',
@@ -60,6 +61,7 @@ export class RaporSorgula implements OnInit {
   raporlar: RaporResponse[] = [];
   seciliRapor: RaporResponse | null = null;
   toplamKayit = 0;
+  sayfaBoyutu = 10;
   yukleniyor = false;
 
   constructor(
@@ -98,25 +100,41 @@ export class RaporSorgula implements OnInit {
 
   // PrimeNG TableLazyLoadEvent tipiyle eşleşen yükleme metodu
   onLazyLoad(event: TableLazyLoadEvent): void {
-    const sayfa = (event.first ?? 0) / (event.rows ?? 10);
-    this.sorgula(sayfa);
+    const boyut = event.rows ?? 10;
+    const ilkKayit = event.first ?? 0;
+    const sayfa = Math.floor(ilkKayit / boyut);
+
+    this.sayfaBoyutu = boyut;
+    this.sorgula(sayfa, boyut);
   }
 
-  sorgula(sayfa = 0): void {
-    this.yukleniyor = true;
+  sorgula(sayfa = 0, boyut = this.sayfaBoyutu): void {
     const v = this.sorguForm.value;
+
+    const baslangic = v.tarihAraligi?.[0];
+    const bitis = v.tarihAraligi?.[1];
+
+    if (baslangic && bitis && baslangic > bitis) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Geçersiz tarih aralığı',
+        detail: 'Başlangıç tarihi, bitiş tarihinden sonra olamaz.',
+      });
+      return;
+    }
 
     let baslangicTarihi: string | undefined;
     let bitisTarihi: string | undefined;
 
-    if (v.tarihAraligi && v.tarihAraligi.length > 0) {
-      if (v.tarihAraligi[0]) {
-        baslangicTarihi = v.tarihAraligi[0].toISOString().split('T')[0];
-      }
-      if (v.tarihAraligi[1]) {
-        bitisTarihi = v.tarihAraligi[1].toISOString().split('T')[0];
-      }
+    if (baslangic) {
+      baslangicTarihi = this.tarihiFormatla(baslangic);
     }
+
+    if (bitis) {
+      bitisTarihi = this.tarihiFormatla(bitis);
+    }
+
+    this.yukleniyor = true;
 
     this.raporService
       .raporSorgula(
@@ -131,7 +149,7 @@ export class RaporSorgula implements OnInit {
           bitisTarihi,
         },
         sayfa,
-        10,
+        boyut,
       )
       .subscribe({
         next: (res) => {
@@ -141,18 +159,21 @@ export class RaporSorgula implements OnInit {
           this.yukleniyor = false;
           this.cdr.detectChanges();
         },
-        error: () => {
+        error: (err) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Hata',
-            detail: 'Raporlar listelenirken bir hata oluştu.',
+            detail: err.error?.message ?? 'Raporlar listelenirken bir hata oluştu.',
           });
+
           this.yukleniyor = false;
           this.cdr.detectChanges();
         },
       });
   }
-
+  private tarihiFormatla(tarih: Date): string {
+    return formatDate(tarih, 'yyyy-MM-dd', 'en-US');
+  }
   temizle(): void {
     this.sorguForm.reset();
     this.sorguForm.controls.raporTuruId.disable();
@@ -174,16 +195,12 @@ export class RaporSorgula implements OnInit {
     return this.seciliRapor?.durum === 'KAYITLI';
   }
 
-    get cevapKaydetAktif(): boolean {
-      return this.seciliRapor?.durum === 'KAYITLI';
-    }
+  get cevapKaydetAktif(): boolean {
+    return this.seciliRapor?.durum === 'KAYITLI';
+  }
 
   get tahakkukKesAktif(): boolean {
-    return (
-      this.seciliRapor !== null &&
-      this.seciliRapor.durum !== 'TAHAKKUK_KESILDI' &&
-      this.seciliRapor.durum !== 'IPTAL'
-    );
+    return this.seciliRapor?.durum === 'KAYITLI';
   }
 
   get iptalEtAktif(): boolean {

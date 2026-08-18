@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -47,6 +47,8 @@ export class RaporGuncelle implements OnInit {
   yukleniyor = false;
   kaydediliyor = false;
 
+  bugun: Date = new Date();
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -58,6 +60,7 @@ export class RaporGuncelle implements OnInit {
 
   ngOnInit(): void {
     this.raporId = this.route.snapshot.paramMap.get('id')!;
+
     this.formOlustur();
     this.referanslariYukle();
     this.raporuYukle();
@@ -77,8 +80,23 @@ export class RaporGuncelle implements OnInit {
   }
 
   private referanslariYukle(): void {
-    this.referansService.anaRaporTurleriniGetir().subscribe((d) => (this.anaRaporTurleri = d));
-    this.referansService.vergiKodlariniGetir().subscribe((d) => (this.vergiKodlari = d));
+    this.referansService.anaRaporTurleriniGetir().subscribe({
+      next: (data) => {
+        this.anaRaporTurleri = data;
+      },
+      error: () => {
+        this.hataGoster('Ana rapor türleri yüklenemedi.');
+      },
+    });
+
+    this.referansService.vergiKodlariniGetir().subscribe({
+      next: (data) => {
+        this.vergiKodlari = data;
+      },
+      error: () => {
+        this.hataGoster('Vergi kodları yüklenemedi.');
+      },
+    });
   }
 
   private raporuYukle(): void {
@@ -90,11 +108,17 @@ export class RaporGuncelle implements OnInit {
 
         this.form.patchValue({
           vergiKimlikNo: rapor.vergiKimlikNo || '-',
+
           tcKimlikNo: rapor.tcKimlikNo || '-',
+
           adSoyadUnvan: rapor.adSoyadUnvan,
+
           vergiKoduId: rapor.vergiKoduId,
+
           anaRaporTuruId: rapor.anaRaporTuruId,
+
           duzenlemeTarihi: new Date(rapor.duzenlemeTarihi),
+
           aciklama: rapor.aciklama,
         });
 
@@ -106,16 +130,13 @@ export class RaporGuncelle implements OnInit {
           this.referansService.raporTurleriniGetir(rapor.anaRaporTuruId).subscribe({
             next: (turler) => {
               this.raporTurleri = turler;
+
               raporTuruControl?.setValue(rapor.raporTuruId);
             },
             error: () => {
               raporTuruControl?.disable();
 
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Hata',
-                detail: 'Rapor türleri yüklenemedi.',
-              });
+              this.hataGoster('Rapor türleri yüklenemedi.');
             },
           });
         }
@@ -123,11 +144,7 @@ export class RaporGuncelle implements OnInit {
         this.yukleniyor = false;
       },
       error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Hata',
-          detail: 'Rapor detayları yüklenemedi.',
-        });
+        this.hataGoster('Rapor detayları yüklenemedi.');
 
         this.yukleniyor = false;
       },
@@ -136,6 +153,7 @@ export class RaporGuncelle implements OnInit {
 
   anaRaporTuruDegisti(): void {
     const anaId = this.form.get('anaRaporTuruId')?.value;
+
     const raporTuruControl = this.form.get('raporTuruId');
 
     raporTuruControl?.reset();
@@ -155,11 +173,7 @@ export class RaporGuncelle implements OnInit {
       error: () => {
         raporTuruControl?.disable();
 
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Hata',
-          detail: 'Rapor türleri yüklenemedi.',
-        });
+        this.hataGoster('Rapor türleri yüklenemedi.');
       },
     });
   }
@@ -167,31 +181,38 @@ export class RaporGuncelle implements OnInit {
   guncelle(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+
       this.messageService.add({
         severity: 'warn',
         summary: 'Eksik bilgi',
         detail: 'Lütfen zorunlu alanları doldurun.',
       });
+
       return;
     }
 
     const val = this.form.getRawValue();
-    const duzenlemeTarihi =
-      val.duzenlemeTarihi instanceof Date
-        ? val.duzenlemeTarihi.toISOString().split('T')[0]
-        : val.duzenlemeTarihi;
+
+    const duzenlemeTarihi = this.tarihiFormatla(val.duzenlemeTarihi);
 
     const payload = {
       vergiKimlikNo: this.raporDetay?.vergiKimlikNo || undefined,
+
       tcKimlikNo: this.raporDetay?.tcKimlikNo || undefined,
+
       anaRaporTuruId: val.anaRaporTuruId,
+
       raporTuruId: val.raporTuruId,
+
       vergiKoduId: val.vergiKoduId,
-      duzenlemeTarihi: duzenlemeTarihi,
+
+      duzenlemeTarihi,
+
       aciklama: val.aciklama?.trim() || undefined,
     };
 
     this.kaydediliyor = true;
+
     this.raporService.raporGuncelle(this.raporId, payload).subscribe({
       next: () => {
         this.messageService.add({
@@ -199,14 +220,12 @@ export class RaporGuncelle implements OnInit {
           summary: 'Başarılı',
           detail: 'Rapor güncellendi.',
         });
+
         setTimeout(() => this.router.navigate(['/rapor-sorgula']), 1000);
       },
       error: (err) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Hata',
-          detail: err.error?.message ?? 'Güncelleme başarısız.',
-        });
+        this.hataGoster(err.error?.message ?? 'Güncelleme başarısız.');
+
         this.kaydediliyor = false;
       },
     });
@@ -214,5 +233,21 @@ export class RaporGuncelle implements OnInit {
 
   iptal(): void {
     this.router.navigate(['/rapor-sorgula']);
+  }
+
+  private tarihiFormatla(tarih: Date | string): string {
+    if (tarih instanceof Date) {
+      return formatDate(tarih, 'yyyy-MM-dd', 'en-US');
+    }
+
+    return tarih;
+  }
+
+  private hataGoster(mesaj: string): void {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Hata',
+      detail: mesaj,
+    });
   }
 }

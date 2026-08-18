@@ -64,7 +64,14 @@
             </div>
             <div class="form-field">
               <label>Cevap Tarihi</label>
-              <p-datepicker formControlName="cevapTarihi" [showIcon]="true" dateFormat="dd.mm.yy"></p-datepicker>
+              <p-datepicker
+                formControlName="cevapTarihi"
+                dateFormat="dd.mm.yy"
+                [showIcon]="true"
+                [readonlyInput]="true"
+                [minDate]="enErkenCevapTarihi"
+                [maxDate]="bugun"
+              ></p-datepicker>
             </div>
           </div>
 
