@@ -1,0 +1,56 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f7fa;
+}
+
+.login-card {
+  width: 360px;
+  padding: 32px;
+  background-color: white;
+  border: 1px solid #d8e0e8;
+  border-radius: 6px;
+  text-align: center;
+
+  h1 {
+    font-size: 18px;
+    color: #203f67;
+    margin: 0 0 8px;
+  }
+
+  p {
+    color: #667085;
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    input,
+    :host ::ng-deep .p-password input {
+      width: 100%;
+    }
+  }
+
+  .login-button {
+    width: 100%;
+    margin-top: 8px;
+  }
+}

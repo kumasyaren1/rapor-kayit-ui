@@ -1,0 +1,33 @@
+<div class="login-page">
+  <div class="login-card">
+
+    <h1>RAPOR KAYIT SİSTEMİ</h1>
+    <p>Devam etmek için giriş yapın.</p>
+
+    <form [formGroup]="loginForm" (ngSubmit)="girisYap()">
+
+      <div class="form-field">
+        <label for="kullaniciAdi">Kullanıcı Adı</label>
+        <input pInputText id="kullaniciAdi" type="text" formControlName="kullaniciAdi">
+      </div>
+
+      <div class="form-field">
+        <label for="sifre">Şifre</label>
+        <p-password
+          id="sifre"
+          formControlName="sifre"
+          [feedback]="false"
+          [toggleMask]="true">
+        </p-password>
+      </div>
+
+      @if (hataMesaji) {
+        <p-message severity="error" [text]="hataMesaji"></p-message>
+      }
+
+      <button pButton type="submit" label="Giriş Yap" class="login-button"></button>
+
+    </form>
+
+  </div>
+</div>
