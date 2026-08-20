@@ -200,7 +200,7 @@ export class RaporSorgula implements OnInit {
   }
 
   get tahakkukKesAktif(): boolean {
-    return this.seciliRapor?.durum === 'KAYITLI';
+    return this.seciliRapor?.durum === 'KAYITLI' || this.seciliRapor?.durum === 'CEVAPLANDI';
   }
 
   get iptalEtAktif(): boolean {

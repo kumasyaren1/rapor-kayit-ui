@@ -1,13 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { SicilService } from './sicil';
 
-import { Sicil } from './sicil';
-
-describe('Sicil', () => {
-  let service: Sicil;
+describe('SicilService', () => {
+  let service: SicilService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Sicil);
+    service = TestBed.inject(SicilService);
   });
 
   it('should be created', () => {

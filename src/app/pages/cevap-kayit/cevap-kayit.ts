@@ -108,7 +108,9 @@ export class CevapKayit implements OnInit {
     const { cevapNumarasi, cevapTarihi, cevapSonucu } = this.form.getRawValue();
 
     const formatliTarih = this.tarihiFormatla(cevapTarihi);
-
+    if (!confirm('Cevap kaydedilecek. Onaylıyor musunuz?')) {
+      return;
+    }
     this.kaydediliyor = true;
 
     this.raporService

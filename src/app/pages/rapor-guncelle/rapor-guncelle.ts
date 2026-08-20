@@ -210,6 +210,9 @@ export class RaporGuncelle implements OnInit {
 
       aciklama: val.aciklama?.trim() || undefined,
     };
+    if (!confirm('Rapor güncellenecek. Onaylıyor musunuz?')) {
+      return;
+    }
 
     this.kaydediliyor = true;
 
